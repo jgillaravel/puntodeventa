@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprisco El Silo — POS e Inventario Feria Bogotá</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Playfair Display para toque artesanal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome para iconografía limpia -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        cream: {
+                            50: '#FDFBF7',
+                            100: '#F8F4EC',
+                            200: '#EFE6D5',
+                            300: '#E2D2B5',
+                        },
+                        forest: {
+                            50: '#F2F6F3',
+                            100: '#E0EBE3',
+                            600: '#2E5A44',
+                            700: '#234735',
+                            800: '#1B3729',
+                            900: '#13281E',
+                        },
+                        gold: {
+                            400: '#D4AF37',
+                            500: '#C59B27',
+                            600: '#A67C1E',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-cream-50 text-stone-800 font-sans antialiased min-h-screen flex flex-col selection:bg-forest-600 selection:text-white">
+
+    <!-- Notificación Toast Flotante -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    <!-- ENCABEZADO PRINCIPAL -->
+    <header class="bg-forest-800 text-white shadow-md sticky top-0 z-30 border-b-4 border-gold-500">
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                
+                <!-- Marca y Ubicación -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-cream-100 text-forest-800 flex items-center justify-center shadow-inner shrink-0 border-2 border-gold-400">
+                            <!-- Ícono SVG de Cabra / Producto Artesanal -->
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2C9 2 7 4 7 6c0 1.5.8 2.8 2 3.5V12l-2 2v5h2v3h6v-3h2v-5l-2-2V9.5c1.2-.7 2-2 2-3.5 0-2-2-4-5-4z"/>
+                                <path d="M7 5C5 4 3 5 3 7c0 1.5 1.5 2 3 2"/>
+                                <path d="M17 5c2-1 4 0 4 2 0 1.5-1.5 2-3 2"/>
+                                <circle cx="10" cy="6.5" r="0.8" fill="currentColor"/>
+                                <circle cx="14" cy="6.5" r="0.8" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="font-serif text-xl sm:text-2xl font-bold tracking-tight text-cream-50">Aprisco El Silo</h1>
+                                <span class="bg-gold-500 text-forest-900 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Feria Bogotá</span>
+                            </div>
+                            <p class="text-xs text-cream-200 flex items-center gap-1.5 mt-0.5">
+                                <i class="fa-solid fa-user-doctor text-gold-400"></i>
+                                <span>Atiende: <strong class="text-white font-semibold">Dra. María Pérez</strong></span>
+                                <span class="mx-1 opacity-50">•</span>
+                                <span id="header-date" class="capitalize"></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- KPI Rápido en Móvil -->
+                    <div class="md:hidden text-right bg-forest-900/70 px-3 py-1.5 rounded-xl border border-forest-600">
+                        <span class="block text-[10px] uppercase tracking-wider text-cream-300">Ventas Hoy</span>
+                        <span id="header-sales-mobile" class="text-sm font-bold text-gold-400">$0</span>
+                    </div>
+                </div>
+
+                <!-- KPI Rápido en Desktop -->
+                <div class="hidden md:flex items-center gap-4">
+                    <div class="bg-forest-900/80 border border-forest-600 rounded-xl px-4 py-2 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-gold-500/20 text-gold-400 flex items-center justify-center">
+                            <i class="fa-solid fa-sack-dollar text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-wider text-cream-300 font-medium">Facturado Hoy (COP)</p>
+                            <p id="header-sales-desktop" class="text-lg font-bold text-white leading-tight">$0</p>
+                        </div>
+                    </div>
+                    <div class="bg-forest-900/80 border border-forest-600 rounded-xl px-4 py-2 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                            <i class="fa-solid fa-receipt text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-wider text-cream-300 font-medium">Facturas Hoy</p>
+                            <p id="header-invoices-desktop" class="text-lg font-bold text-white leading-tight">0</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- NAVEGACIÓN PRINCIPAL (PESTAÑAS) -->
+        <nav class="bg-forest-900 border-t border-forest-700 overflow-x-auto">
+            <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-2">
+                <button onclick="switchTab('pos')" id="tab-btn-pos" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border-b-4 transition-all whitespace-nowrap border-gold-400 text-white bg-forest-800/60">
+                    <i class="fa-solid fa-cash-register text-gold-400"></i>
+                    <span>Facturación (POS)</span>
+                </button>
+                <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border-b-4 border-transparent text-cream-200 hover:text-white hover:bg-forest-800/40 transition-all whitespace-nowrap">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Productos y Stock</span>
+                    <span id="low-stock-badge" class="hidden bg-amber-500 text-stone-900 text-xs font-bold px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+                <button onclick="switchTab('clients')" id="tab-btn-clients" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border-b-4 border-transparent text-cream-200 hover:text-white hover:bg-forest-800/40 transition-all whitespace-nowrap">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Clientes</span>
+                </button>
+                <button onclick="switchTab('sales')" id="tab-btn-sales" class="nav-tab flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border-b-4 border-transparent text-cream-200 hover:text-white hover:bg-forest-800/40 transition-all whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Ventas y Cierre</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+
+        <!-- ========================================================= -->
+        <!-- SECCIÓN 1: PUNTO DE VENTA / FACTURACIÓN (POS)             -->
+        <!-- ========================================================= -->
+        <section id="section-pos" class="tab-section">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Columna Izquierda: Catálogo de Productos (7 cols en desktop) -->
+                <div class="lg:col-span-7 xl:col-span-8 space-y-4">
+                    <!-- Barra de Búsqueda y Filtro Rápido -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-cream-200 flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                            <input type="text" id="pos-search" oninput="renderPosCatalog()" placeholder="Buscar queso, arequipe, yogurt..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-cream-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-600 text-sm">
+                        </div>
+                        <select id="pos-category-filter" onchange="renderPosCatalog()" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-cream-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-600 text-sm font-medium text-stone-700">
+                            <option value="ALL">Todas las categorías</option>
+                            <option value="Quesos">Quesos Artesanales</option>
+                            <option value="Dulces">Arequipe y Dulces</option>
+                            <option value="Lácteos y Yogures">Yogures y Leche</option>
+                            <option value="Otros">Otros Derivados</option>
+                        </select>
+                    </div>
+
+                    <!-- Grid de Tarjetas de Productos -->
+                    <div id="pos-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                        <!-- Se llena dinámicamente con JS -->
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Carrito y Facturación (5 cols en desktop) -->
+                <div class="lg:col-span-5 xl:col-span-4 bg-white rounded-2xl shadow-md border border-cream-200 overflow-hidden sticky top-28">
+                    <div class="bg-forest-700 text-white px-5 py-3.5 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-basket-shopping text-gold-400"></i>
+                            <h2 class="font-bold text-base">Factura Actual</h2>
+                        </div>
+                        <button onclick="clearCart()" class="text-xs bg-forest-800 hover:bg-red-600 text-cream-100 hover:text-white px-2.5 py-1 rounded-lg transition-colors">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Vaciar
+                        </button>
+                    </div>
+
+                    <div class="p-4 space-y-4">
+                        <!-- Selector de Cliente -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-1.5">Cliente</label>
+                            <div class="flex gap-2">
+                                <select id="pos-client-select" class="flex-1 px-3 py-2.5 rounded-xl border border-stone-300 bg-cream-50 text-sm font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-forest-600">
+                                    <!-- Se llena dinámicamente -->
+                                </select>
+                                <button onclick="openClientModal(true)" title="Registrar nuevo cliente rápido" class="px-3.5 py-2.5 bg-cream-200 hover:bg-gold-400 text-forest-900 font-bold rounded-xl transition-colors flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Ítems en el Carrito -->
+                        <div class="border-t border-b border-stone-100 py-2">
+                            <div id="pos-cart-items" class="max-h-64 overflow-y-auto space-y-2.5 pr-1">
+                                <!-- Se llena dinámicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Descuento y Método de Pago -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-stone-600 mb-1">Descuento (COP)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">$</span>
+                                    <input type="number" id="pos-discount" min="0" step="500" value="0" oninput="updateCartTotals()" class="w-full pl-7 pr-2 py-2 rounded-xl border border-stone-300 text-sm font-semibold text-right focus:outline-none focus:ring-2 focus:ring-forest-600">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-stone-600 mb-1">Método de Pago</label>
+                                <select id="pos-payment-method" class="w-full px-2.5 py-2 rounded-xl border border-stone-300 bg-white text-sm font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-forest-600">
+                                    <option value="Efectivo">💵 Efectivo</option>
+                                    <option value="Nequi">📱 Nequi</option>
+                                    <option value="Daviplata">📲 Daviplata</option>
+                                    <option value="Transferencia / Datáfono">💳 Transferencia / Datáfono</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Resumen de Totales -->
+                        <div class="bg-cream-100 p-3.5 rounded-xl space-y-1.5 border border-cream-200">
+                            <div class="flex justify-between text-xs text-stone-600">
+                                <span>Subtotal:</span>
+                                <span id="pos-subtotal" class="font-semibold">$0</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-amber-700" id="pos-discount-row">
+                                <span>Descuento aplicado:</span>
+                                <span id="pos-discount-display" class="font-semibold">-$0</span>
+                            </div>
+                            <div class="flex justify-between items-baseline pt-1.5 border-t border-cream-300">
+                                <span class="text-sm font-bold text-forest-900">TOTAL A PAGAR:</span>
+                                <span id="pos-total" class="text-2xl font-extrabold text-forest-700">$0</span>
+                            </div>
+                        </div>
+
+                        <!-- Botón Principal de Cobro -->
+                        <button onclick="checkout()" id="btn-checkout" class="w-full py-3.5 px-4 bg-forest-600 hover:bg-forest-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-lg shadow-forest-600/20 transition-all flex items-center justify-center gap-2 text-base">
+                            <i class="fa-solid fa-file-invoice-dollar text-lg text-gold-400"></i>
+                            <span>Generar Factura y Registrar Venta</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SECCIÓN 2: PRODUCTOS E INVENTARIO (STOCK)                 -->
+        <!-- ========================================================= -->
+        <section id="section-inventory" class="tab-section hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-cream-200">
+                <div>
+                    <h2 class="font-serif text-2xl font-bold text-forest-900">Inventario de Productos</h2>
+                    <p class="text-sm text-stone-500">Gestiona existencias disponibles para la feria en Bogotá y agrega nuevos subproductos.</p>
+                </div>
+                <button onclick="openProductModal()" class="px-5 py-3 bg-forest-600 hover:bg-forest-700 text-white font-semibold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 shrink-0">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nuevo Producto</span>
+                </button>
+            </div>
+
+            <!-- Filtros de Inventario -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-cream-200 flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                    <input type="text" id="inv-search" oninput="renderInventoryTable()" placeholder="Buscar producto por nombre o presentación..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-cream-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-600 text-sm">
+                </div>
+                <select id="inv-category-filter" onchange="renderInventoryTable()" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-cream-50 text-sm font-medium">
+                    <option value="ALL">Todas las categorías</option>
+                    <option value="Quesos">Quesos Artesanales</option>
+                    <option value="Dulces">Arequipe y Dulces</option>
+                    <option value="Lácteos y Yogures">Yogures y Leche</option>
+                    <option value="Otros">Otros Derivados</option>
+                </select>
+                <select id="inv-stock-filter" onchange="renderInventoryTable()" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-cream-50 text-sm font-medium">
+                    <option value="ALL">Todo el stock</option>
+                    <option value="LOW">⚠️ Stock Bajo (≤ 5)</option>
+                    <option value="OUT">🚫 Agotados (0)</option>
+                </select>
+            </div>
+
+            <!-- Tabla Responsiva de Inventario -->
+            <div class="bg-white rounded-2xl shadow-sm border border-cream-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-cream-100 border-b border-cream-200 text-xs font-bold uppercase tracking-wider text-stone-600">
+                                <th class="py-3.5 px-4">Producto</th>
+                                <th class="py-3.5 px-4">Categoría</th>
+                                <th class="py-3.5 px-4 text-right">Precio (COP)</th>
+                                <th class="py-3.5 px-4 text-center">Stock Disponible</th>
+                                <th class="py-3.5 px-4 text-center">Reabastecer Rápido</th>
+                                <th class="py-3.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-stone-100 text-sm">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SECCIÓN 3: DIRECTORIO DE CLIENTES                         -->
+        <!-- ========================================================= -->
+        <section id="section-clients" class="tab-section hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-cream-200">
+                <div>
+                    <h2 class="font-serif text-2xl font-bold text-forest-900">Clientes de la Feria</h2>
+                    <p class="text-sm text-stone-500">Registra compradores frecuentes para fidelización y pedidos posteriores desde el Aprisco.</p>
+                </div>
+                <button onclick="openClientModal(false)" class="px-5 py-3 bg-forest-600 hover:bg-forest-700 text-white font-semibold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 shrink-0">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Registrar Cliente</span>
+                </button>
+            </div>
+
+            <!-- Buscador de Clientes -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-cream-200">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                    <input type="text" id="client-search" oninput="renderClientsGrid()" placeholder="Buscar cliente por nombre, teléfono/WhatsApp o documento..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-cream-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-600 text-sm">
+                </div>
+            </div>
+
+            <!-- Tarjetas de Clientes -->
+            <div id="clients-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SECCIÓN 4: VENTAS Y CIERRE DIARIO                         -->
+        <!-- ========================================================= -->
+        <section id="section-sales" class="tab-section hidden space-y-6">
+            <!-- Encabezado y Acciones de Reporte -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-cream-200">
+                <div>
+                    <h2 class="font-serif text-2xl font-bold text-forest-900">Ventas y Cierre Diario</h2>
+                    <p class="text-sm text-stone-500">Consolidado financiero en Pesos Colombianos (COP) para la Dra. María Pérez.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <input type="date" id="sales-date-filter" onchange="renderSalesReport()" class="px-3.5 py-2.5 rounded-xl border border-stone-300 bg-cream-50 text-sm font-medium text-stone-700">
+                    <button onclick="exportSalesCSV()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>Exportar CSV</span>
+                    </button>
+                    <button onclick="openResetConfirmModal()" class="px-3.5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-sm font-semibold rounded-xl transition-all flex items-center gap-2" title="Restaurar datos iniciales de demostración">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span class="hidden sm:inline">Demo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjetas KPIs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-cream-200 border-l-4 border-l-forest-600">
+                    <p class="text-xs font-bold uppercase tracking-wider text-stone-400">Total Vendido (Fecha)</p>
+                    <p id="kpi-total-sales" class="text-2xl font-extrabold text-forest-800 mt-1">$0</p>
+                    <p id="kpi-invoice-count" class="text-xs text-stone-500 mt-1">0 facturas válidas</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-cream-200 border-l-4 border-l-emerald-500">
+                    <p class="text-xs font-bold uppercase tracking-wider text-stone-400">Ingresos en Efectivo</p>
+                    <p id="kpi-cash-sales" class="text-2xl font-extrabold text-emerald-700 mt-1">$0</p>
+                    <p class="text-xs text-stone-500 mt-1">Caja física en stand</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-cream-200 border-l-4 border-l-indigo-500">
+                    <p class="text-xs font-bold uppercase tracking-wider text-stone-400">Pagos Digitales</p>
+                    <p id="kpi-digital-sales" class="text-2xl font-extrabold text-indigo-700 mt-1">$0</p>
+                    <p class="text-xs text-stone-500 mt-1">Nequi, Daviplata y Transf.</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-cream-200 border-l-4 border-l-gold-500">
+                    <p class="text-xs font-bold uppercase tracking-wider text-stone-400">Producto Estrella</p>
+                    <p id="kpi-top-product" class="text-base font-bold text-stone-800 mt-1 line-clamp-1">Sin ventas aún</p>
+                    <p id="kpi-top-product-qty" class="text-xs text-amber-700 font-medium mt-1">0 unidades vendidas</p>
+                </div>
+            </div>
+
+            <!-- Tabla de Facturas Emitidas -->
+            <div class="bg-white rounded-2xl shadow-sm border border-cream-200 overflow-hidden">
+                <div class="px-5 py-4 border-b border-cream-200 flex items-center justify-between bg-cream-50">
+                    <h3 class="font-bold text-forest-900">Historial de Facturas</h3>
+                    <span id="sales-table-subtitle" class="text-xs text-stone-500">Mostrando todas las facturas</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-cream-100 border-b border-cream-200 text-xs font-bold uppercase tracking-wider text-stone-600">
+                                <th class="py-3.5 px-4">N° Factura</th>
+                                <th class="py-3.5 px-4">Hora / Fecha</th>
+                                <th class="py-3.5 px-4">Cliente</th>
+                                <th class="py-3.5 px-4">Productos</th>
+                                <th class="py-3.5 px-4">Método Pago</th>
+                                <th class="py-3.5 px-4 text-right">Total (COP)</th>
+                                <th class="py-3.5 px-4 text-center">Estado</th>
+                                <th class="py-3.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body" class="divide-y divide-stone-100 text-sm">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="bg-cream-100 border-t border-cream-200 py-4 px-4 text-center text-xs text-stone-500 mt-auto">
+        <p><strong class="text-forest-800">Aprisco El Silo</strong> • Productos Artesanales de Leche de Cabra • Feria Agroindustrial Bogotá, Colombia</p>
+    </footer>
+
+    <!-- ========================================================= -->
+    <!-- MODALES INTERACTIVOS                                      -->
+    <!-- ========================================================= -->
+
+    <!-- MODAL 1: COMPROBANTE / FACTURA GENERADA -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-cream-200 animate-fade-in">
+            <div class="bg-forest-800 text-white px-5 py-3.5 flex items-center justify-between">
+                <span class="font-bold flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-400"></i> Comprobante de Venta</span>
+                <button onclick="closeModal('receipt-modal')" class="text-cream-200 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <!-- Área imprimible del recibo -->
+            <div id="receipt-printable-area" class="p-6 bg-cream-50 text-stone-800 font-mono text-xs space-y-3 max-h-[70vh] overflow-y-auto">
+                <div class="text-center border-b border-dashed border-stone-400 pb-3">
+                    <h3 class="font-serif text-lg font-bold text-forest-900">APRISCO EL SILO</h3>
+                    <p class="text-[11px] text-stone-600">Derivados Artesanales de Leche de Cabra</p>
+                    <p class="text-[11px] text-stone-600">Stand Feria Bogotá, Colombia</p>
+                    <p class="text-[11px] text-stone-600 mt-1">Atendido por: <strong>Dra. María Pérez</strong></p>
+                </div>
+
+                <div class="flex justify-between text-[11px]">
+                    <div>
+                        <p><strong>Factura:</strong> <span id="rec-id"></span></p>
+                        <p><strong>Cliente:</strong> <span id="rec-client"></span></p>
+                    </div>
+                    <div class="text-right">
+                        <p><strong>Fecha:</strong> <span id="rec-date"></span></p>
+                        <p><strong>Pago:</strong> <span id="rec-payment"></span></p>
+                    </div>
+                </div>
+
+                <div class="border-t border-b border-dashed border-stone-400 py-2">
+                    <table class="w-full text-[11px]">
+                        <thead>
+                            <tr class="border-b border-stone-300 text-left">
+                                <th class="pb-1">Cant. Producto</th>
+                                <th class="pb-1 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rec-items" class="divide-y divide-stone-200/60">
+                            <!-- Ítems -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="space-y-1 text-right text-xs">
+                    <p>Subtotal: <span id="rec-subtotal"></span></p>
+                    <p id="rec-discount-line" class="text-amber-700">Descuento: <span id="rec-discount"></span></p>
+                    <p class="text-base font-bold text-forest-900 pt-1">TOTAL COP: <span id="rec-total"></span></p>
+                </div>
+
+                <div class="text-center pt-2 border-t border-dashed border-stone-400 text-[10px] text-stone-500">
+                    <p>¡Gracias por apoyar la producción caprina artesanal!</p>
+                    <p>Conservación en frío recomendada (2°C - 6°C)</p>
+                </div>
+            </div>
+
+            <!-- Botones de acción del recibo -->
+            <div class="p-4 bg-white border-t border-stone-200 flex flex-col sm:flex-row gap-2">
+                <button onclick="copyReceiptWhatsApp()" class="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                    <i class="fa-brands fa-whatsapp text-base"></i>
+                    <span>Copiar para WhatsApp</span>
+                </button>
+                <button onclick="printReceipt()" class="flex-1 py-2.5 px-3 bg-forest-700 hover:bg-forest-800 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Imprimir</span>
+                </button>
+                <button onclick="closeModal('receipt-modal')" class="py-2.5 px-4 bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs font-bold rounded-xl transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: AGREGAR / EDITAR PRODUCTO -->
+    <div id="product-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-cream-200">
+            <div class="bg-forest-800 text-white px-5 py-3.5 flex items-center justify-between">
+                <h3 id="product-modal-title" class="font-bold">Nuevo Producto Caprino</h3>
+                <button onclick="closeModal('product-modal')" class="text-cream-200 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="product-form" onsubmit="saveProduct(event)" class="p-5 space-y-4">
+                <input type="hidden" id="prod-id">
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 mb-1">Nombre del Producto *</label>
+                    <input type="text" id="prod-name" required placeholder="Ej: Queso Madurado al Vino Tinto" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1">Categoría *</label>
+                        <select id="prod-category" class="w-full px-3 py-2.5 rounded-xl border border-stone-300 text-sm bg-white focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                            <option value="Quesos">Quesos</option>
+                            <option value="Dulces">Dulces</option>
+                            <option value="Lácteos y Yogures">Lácteos y Yogures</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1">Presentación *</label>
+                        <input type="text" id="prod-unit" required placeholder="Ej: 250g, 500ml, 1L" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1">Precio Venta (COP $) *</label>
+                        <input type="number" id="prod-price" required min="500" step="500" placeholder="18000" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm font-semibold focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1">Stock Disponible *</label>
+                        <input type="number" id="prod-stock" required min="0" step="1" placeholder="15" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm font-semibold focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 mb-1">Ícono Representativo</label>
+                    <select id="prod-icon" class="w-full px-3 py-2.5 rounded-xl border border-stone-300 text-sm bg-white">
+                        <option value="🧀">🧀 Queso Artesanal</option>
+                        <option value="🍯">🍯 Arequipe / Cajeta / Dulce</option>
+                        <option value="🥛">🥛 Leche / Yogurt</option>
+                        <option value="🍓">🍓 Yogurt con Frutas</option>
+                        <option value="🌿">🌿 Queso con Hierbas</option>
+                        <option value="🧴">🧴 Crema / Cosmética Caprina</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('product-modal')" class="px-4 py-2.5 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-700 text-sm font-semibold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-forest-600 hover:bg-forest-700 text-white text-sm font-bold shadow-sm">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: REGISTRAR CLIENTE -->
+    <div id="client-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-cream-200">
+            <div class="bg-forest-800 text-white px-5 py-3.5 flex items-center justify-between">
+                <h3 class="font-bold">Registrar Cliente en Feria</h3>
+                <button onclick="closeModal('client-modal')" class="text-cream-200 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="client-form" onsubmit="saveClient(event)" class="p-5 space-y-4">
+                <input type="hidden" id="client-from-pos" value="false">
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 mb-1">Nombre Completo *</label>
+                    <input type="text" id="cli-name" required placeholder="Ej: Carolina Restrepo" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1">Teléfono / WhatsApp *</label>
+                        <input type="tel" id="cli-phone" required placeholder="310 555 1234" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 mb-1">Cédula / NIT (Opcional)</label>
+                        <input type="text" id="cli-doc" placeholder="1020304050" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 mb-1">Correo Electrónico (Opcional)</label>
+                    <input type="email" id="cli-email" placeholder="cliente@correo.com" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-forest-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 mb-1">Notas / Preferencias de Compra</label>
+                    <textarea id="cli-notes" rows="2" placeholder="Ej: Le encanta el queso madurado y pide domicilio en Chapinero" class="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-forest-600 focus:outline-none"></textarea>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('client-modal')" class="px-4 py-2.5 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-700 text-sm font-semibold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-forest-600 hover:bg-forest-700 text-white text-sm font-bold shadow-sm">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: CONFIRMACIÓN PERSONALIZADA (SIN ALERT/CONFIRM NATIVO) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-cream-200 text-center space-y-4">
+            <div id="confirm-icon" class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 mx-auto flex items-center justify-center text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 id="confirm-title" class="font-bold text-lg text-stone-900">¿Confirmar acción?</h3>
+            <p id="confirm-message" class="text-sm text-stone-600">Esta acción modificará los registros actuales.</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeModal('confirm-modal')" class="flex-1 py-2.5 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 text-sm font-semibold">Cancelar</button>
+                <button id="confirm-action-btn" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA DE LA APLICACIÓN -->
+    <script>
+        // =========================================================================
+        // 1. ESTADO Y DATOS INICIALES (PRECARGA REALISTA EN COP - BOGOTÁ)
+        // =========================================================================
+        const STORAGE_KEYS = {
+            PRODUCTS: 'aprisco_silo_products_v1',
+            CLIENTS: 'aprisco_silo_clients_v1',
+            SALES: 'aprisco_silo_sales_v1'
+        };
+
+        const DEFAULT_PRODUCTS = [
+            { id: 'P01', name: 'Queso Fresco Campesino de Cabra', category: 'Quesos', unit: '250g', price: 16000, stock: 24, icon: '🧀' },
+            { id: 'P02', name: 'Queso Madurado tipo Manchego', category: 'Quesos', unit: '200g', price: 24000, stock: 14, icon: '🧀' },
+            { id: 'P03', name: 'Queso Crema con Finas Hierbas', category: 'Quesos', unit: '200g', price: 18500, stock: 18, icon: '🌿' },
+            { id: 'P04', name: 'Arequipe Artesanal de Cabra', category: 'Dulces', unit: '250g', price: 15000, stock: 30, icon: '🍯' },
+            { id: 'P05', name: 'Yogurt Griego de Cabra Natural', category: 'Lácteos y Yogures', unit: '500ml', price: 14000, stock: 20, icon: '🥛' },
+            { id: 'P06', name: 'Yogurt de Cabra con Frutos Rojos', category: 'Lácteos y Yogures', unit: '500ml', price: 15500, stock: 16, icon: '🍓' },
+            { id: 'P07', name: 'Cajeta Artesanal Envigado/Silo', category: 'Dulces', unit: '300g', price: 17000, stock: 12, icon: '🍯' },
+            { id: 'P08', name: 'Leche Pasteurizada de Cabra', category: 'Lácteos y Yogures', unit: '1 Litro', price: 12000, stock: 15, icon: '🥛' },
+            { id: 'P09', name: 'Dulce de Leche Cortada Caprina', category: 'Dulces', unit: '250g', price: 16500, stock: 5, icon: '🍯' },
+            { id: 'P10', name: 'Jabón Artesanal Leche de Cabra y Avena', category: 'Otros', unit: '110g', price: 14000, stock: 22, icon: '🧴' }
+        ];
+
+        const DEFAULT_CLIENTS = [
+            { id: 'C00', name: 'Cliente Mostrador (Feria Bogotá)', phone: 'N/A', doc: '', email: '', notes: 'Venta directa rápida en stand de feria.' },
+            { id: 'C01', name: 'Andrés Felipe Gómez', phone: '311 482 9012', doc: '79845123', email: 'afgomez@correo.com', notes: 'Prefiere queso madurado y yogurt griego sin azúcar.' },
+            { id: 'C02', name: 'Dra. Claudia Marcela Díaz', phone: '300 719 3344', doc: '52418963', email: 'cdiaz.nutricion@correo.com', notes: 'Nutricionista interesada en pedidos semanales de leche y queso fresco.' }
+        ];
+
+        let products = [];
+        let clients = [];
+        let sales = [];
+        let cart = [];
+        let currentReceiptSale = null;
+
+        // =========================================================================
+        // 2. UTILIDADES DE FORMATO Y FECHA
+        // =========================================================================
+        function formatCOP(amount) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        function getTodayISO() {
+            const now = new Date();
+            const offset = now.getTimezoneOffset();
+            const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+            return localDate.toISOString().split('T')[0];
+        }
+
+        function formatReadableDate(isoString) {
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(isoString).toLocaleDateString('es-CO', options);
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = type === 'success' 
+                ? 'bg-forest-800 text-white border-gold-400' 
+                : type === 'error' 
+                    ? 'bg-red-700 text-white border-red-300' 
+                    : 'bg-amber-600 text-white border-amber-200';
+            const icon = type === 'success' ? 'fa-circle-check text-gold-400' : type === 'error' ? 'fa-circle-exclamation' : 'fa-triangle-exclamation';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border-l-4 ${colors} text-sm font-medium transform transition-all duration-300 translate-y-0 opacity-100`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        // =========================================================================
+        // 3. PERSISTENCIA EN LOCALSTORAGE
+        // =========================================================================
+        function loadData() {
+            try {
+                const storedProducts = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+                const storedClients = localStorage.getItem(STORAGE_KEYS.CLIENTS);
+                const storedSales = localStorage.getItem(STORAGE_KEYS.SALES);
+
+                products = storedProducts ? JSON.parse(storedProducts) : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+                clients = storedClients ? JSON.parse(storedClients) : JSON.parse(JSON.stringify(DEFAULT_CLIENTS));
+                sales = storedSales ? JSON.parse(storedSales) : [];
+
+                if (!storedProducts) saveProductsStorage();
+                if (!storedClients) saveClientsStorage();
+            } catch (e) {
+                console.error("Error cargando localStorage:", e);
+                products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+                clients = JSON.parse(JSON.stringify(DEFAULT_CLIENTS));
+                sales = [];
+            }
+        }
+
+        function saveProductsStorage() { localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products)); }
+        function saveClientsStorage() { localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(clients)); }
+        function saveSalesStorage() { localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(sales)); }
+
+        // =========================================================================
+        // 4. NAVEGACIÓN ENTRE PESTAÑAS
+        // =========================================================================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('border-gold-400', 'text-white', 'bg-forest-800/60');
+                btn.classList.add('border-transparent', 'text-cream-200');
+            });
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            activeBtn.classList.remove('border-transparent', 'text-cream-200');
+            activeBtn.classList.add('border-gold-400', 'text-white', 'bg-forest-800/60');
+
+            if (tabName === 'pos') { renderPosCatalog(); renderClientSelect(); }
+            if (tabName === 'inventory') { renderInventoryTable(); }
+            if (tabName === 'clients') { renderClientsGrid(); }
+            if (tabName === 'sales') { renderSalesReport(); }
+        }
+
+        // =========================================================================
+        // 5. MÓDULO POS (PUNTO DE VENTA Y CARRITO)
+        // =========================================================================
+        function renderPosCatalog() {
+            const grid = document.getElementById('pos-catalog-grid');
+            const query = document.getElementById('pos-search').value.toLowerCase().trim();
+            const cat = document.getElementById('pos-category-filter').value;
+
+            const filtered = products.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(query) || p.unit.toLowerCase().includes(query);
+                const matchesCat = cat === 'ALL' || p.category === cat;
+                return matchesSearch && matchesCat;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl border border-cream-200 text-center text-stone-500">
+                    <i class="fa-solid fa-box-open text-3xl mb-2 text-stone-300"></i>
+                    <p>No se encontraron productos con ese filtro.</p>
+                </div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => {
+                const inCartItem = cart.find(item => item.productId === p.id);
+                const inCartQty = inCartItem ? inCartItem.qty : 0;
+                const remainingStock = p.stock - inCartQty;
+                const isOut = remainingStock <= 0;
+                const isLow = remainingStock > 0 && remainingStock <= 5;
+
+                return `
+                <div onclick="${isOut ? '' : `addToCart('${p.id}')`}" 
+                     class="group bg-white rounded-2xl p-4 border transition-all flex flex-col justify-between select-none
+                     ${isOut ? 'border-stone-200 opacity-60 cursor-not-allowed' : 'border-cream-200 hover:border-forest-600 hover:shadow-md cursor-pointer active:scale-[0.98]'}">
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <span class="text-3xl bg-cream-100 w-12 h-12 rounded-xl flex items-center justify-center border border-cream-200 group-hover:scale-105 transition-transform">${p.icon || '🧀'}</span>
+                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${isOut ? 'bg-red-100 text-red-700' : isLow ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                                ${isOut ? 'Agotado' : `Disp: ${remainingStock}`}
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-stone-800 text-sm leading-snug line-clamp-2">${p.name}</h3>
+                        <p class="text-xs text-stone-500 mt-0.5">${p.category} • <strong>${p.unit}</strong></p>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between">
+                        <span class="font-extrabold text-forest-700 text-base">${formatCOP(p.price)}</span>
+                        <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${isOut ? 'bg-stone-100 text-stone-400' : 'bg-forest-50 text-forest-700 group-hover:bg-forest-600 group-hover:text-white'}">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existing = cart.find(item => item.productId === productId);
+            const currentQty = existing ? existing.qty : 0;
+
+            if (currentQty + 1 > product.stock) {
+                showToast(`Stock máximo alcanzado para ${product.name} (${product.stock} disp.)`, 'warning');
+                return;
+            }
+
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({
+                    productId: product.id,
+                    name: product.name,
+                    unit: product.unit,
+                    price: product.price,
+                    qty: 1
+                });
+            }
+
+            renderCart();
+            renderPosCatalog();
+        }
+
+        function updateCartQty(productId, delta) {
+            const idx = cart.findIndex(item => item.productId === productId);
+            if (idx === -1) return;
+
+            const product = products.find(p => p.id === productId);
+            const newQty = cart[idx].qty + delta;
+
+            if (newQty <= 0) {
+                cart.splice(idx, 1);
+            } else if (product && newQty > product.stock) {
+                showToast(`Solo hay ${product.stock} unidades disponibles en inventario.`, 'warning');
+                return;
+            } else {
+                cart[idx].qty = newQty;
+            }
+
+            renderCart();
+            renderPosCatalog();
+        }
+
+        function clearCart() {
+            cart = [];
+            document.getElementById('pos-discount').value = 0;
+            renderCart();
+            renderPosCatalog();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('pos-cart-items');
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="py-8 text-center text-stone-400 text-xs">
+                    <i class="fa-solid fa-basket-shopping text-2xl mb-1.5 opacity-40"></i>
+                    <p>Toca los productos del catálogo para agregarlos a la factura.</p>
+                </div>`;
+                updateCartTotals();
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between gap-2 bg-cream-50 p-2.5 rounded-xl border border-cream-200">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-stone-800 truncate">${item.name}</p>
+                        <p class="text-[11px] text-stone-500">${item.unit} • ${formatCOP(item.price)} c/u</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="updateCartQty('${item.productId}', -1)" class="w-7 h-7 rounded-lg bg-white border border-stone-300 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-xs">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <span class="w-6 text-center text-xs font-extrabold text-stone-800">${item.qty}</span>
+                        <button onclick="updateCartQty('${item.productId}', 1)" class="w-7 h-7 rounded-lg bg-forest-600 hover:bg-forest-700 text-white flex items-center justify-center font-bold text-xs">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="text-right min-w-[68px] shrink-0">
+                        <p class="text-xs font-extrabold text-forest-800">${formatCOP(item.price * item.qty)}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            updateCartTotals();
+        }
+
+        function updateCartTotals() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let discount = parseInt(document.getElementById('pos-discount').value) || 0;
+            if (discount < 0) discount = 0;
+            if (discount > subtotal) discount = subtotal;
+
+            const total = subtotal - discount;
+
+            document.getElementById('pos-subtotal').textContent = formatCOP(subtotal);
+            document.getElementById('pos-discount-display').textContent = `-${formatCOP(discount)}`;
+            document.getElementById('pos-total').textContent = formatCOP(total);
+        }
+
+        function renderClientSelect() {
+            const select = document.getElementById('pos-client-select');
+            const currentVal = select.value;
+            select.innerHTML = clients.map(c => `<option value="${c.id}">${c.name} ${c.phone !== 'N/A' ? `(${c.phone})` : ''}</option>`).join('');
+            if (currentVal && clients.some(c => c.id === currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                showToast('Agrega al menos un producto para generar la factura.', 'warning');
+                return;
+            }
+
+            // Validar stock nuevamente por seguridad
+            for (const item of cart) {
+                const prod = products.find(p => p.id === item.productId);
+                if (!prod || prod.stock < item.qty) {
+                    showToast(`Stock insuficiente para ${item.name}. Verifica el inventario.`, 'error');
+                    return;
+                }
+            }
+
+            const clientId = document.getElementById('pos-client-select').value;
+            const clientObj = clients.find(c => c.id === clientId) || clients[0];
+            const paymentMethod = document.getElementById('pos-payment-method').value;
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let discount = parseInt(document.getElementById('pos-discount').value) || 0;
+            if (discount < 0) discount = 0;
+            if (discount > subtotal) discount = subtotal;
+            const total = subtotal - discount;
+
+            // Descontar inventario
+            cart.forEach(item => {
+                const prod = products.find(p => p.id === item.productId);
+                if (prod) prod.stock -= item.qty;
+            });
+            saveProductsStorage();
+
+            // Crear registro de venta
+            const now = new Date();
+            const invoiceNumber = `SILO-${String(sales.length + 1).padStart(4, '0')}`;
+            const newSale = {
+                id: invoiceNumber,
+                dateISO: getTodayISO(),
+                timestamp: now.toISOString(),
+                timeStr: now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+                seller: 'Dra. María Pérez',
+                clientId: clientObj.id,
+                clientName: clientObj.name,
+                clientPhone: clientObj.phone,
+                paymentMethod: paymentMethod,
+                items: JSON.parse(JSON.stringify(cart)),
+                subtotal: subtotal,
+                discount: discount,
+                total: total,
+                status: 'VALIDA'
+            };
+
+            sales.unshift(newSale);
+            saveSalesStorage();
+
+            // Limpiar carrito y refrescar vistas
+            clearCart();
+            updateHeaderKPIs();
+            updateLowStockBadge();
+            showToast(`¡Factura ${invoiceNumber} registrada por ${formatCOP(total)}!`);
+
+            // Mostrar comprobante
+            openReceiptModal(newSale);
+        }
+
+        // =========================================================================
+        // 6. MÓDULO COMPROBANTE / RECIBO
+        // =========================================================================
+        function openReceiptModal(sale) {
+            currentReceiptSale = sale;
+            document.getElementById('rec-id').textContent = sale.id;
+            document.getElementById('rec-client').textContent = sale.clientName;
+            document.getElementById('rec-date').textContent = `${sale.dateISO} ${sale.timeStr}`;
+            document.getElementById('rec-payment').textContent = sale.paymentMethod;
+
+            document.getElementById('rec-items').innerHTML = sale.items.map(i => `
+                <tr>
+                    <td class="py-1 pr-2">${i.qty}x ${i.name} (${i.unit})</td>
+                    <td class="py-1 text-right font-semibold">${formatCOP(i.price * i.qty)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('rec-subtotal').textContent = formatCOP(sale.subtotal);
+            if (sale.discount > 0) {
+                document.getElementById('rec-discount-line').classList.remove('hidden');
+                document.getElementById('rec-discount').textContent = `-${formatCOP(sale.discount)}`;
+            } else {
+                document.getElementById('rec-discount-line').classList.add('hidden');
+            }
+            document.getElementById('rec-total').textContent = formatCOP(sale.total);
+
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function copyReceiptWhatsApp() {
+            if (!currentReceiptSale) return;
+            const s = currentReceiptSale;
+            const itemsText = s.items.map(i => `• ${i.qty}x ${i.name} (${i.unit}): ${formatCOP(i.price * i.qty)}`).join('\n');
+            const msg = `🐐 *APRISCO EL SILO — FERIA BOGOTÁ*\n` +
+                        `📄 *Comprobante:* ${s.id}\n` +
+                        `📅 *Fecha:* ${s.dateISO} ${s.timeStr}\n` +
+                        `👤 *Cliente:* ${s.clientName}\n` +
+                        `👩🏻‍⚕️ *Atendido por:* ${s.seller}\n` +
+                        `--------------------------\n` +
+                        `${itemsText}\n` +
+                        `--------------------------\n` +
+                        (s.discount > 0 ? `Descuento: -${formatCOP(s.discount)}\n` : '') +
+                        `💰 *TOTAL PAGADO: ${formatCOP(s.total)} COP*\n` +
+                        `💳 *Método:* ${s.paymentMethod}\n\n` +
+                        `¡Muchas gracias por disfrutar nuestros productos artesanales de leche de cabra!`;
+
+            const tempInput = document.createElement('textarea');
+            tempInput.value = msg;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast('Comprobante copiado al portapapeles listo para pegar en WhatsApp.');
+        }
+
+        function printReceipt() {
+            const content = document.getElementById('receipt-printable-area').innerHTML;
+            const printWin = window.open('', '', 'width=400,height=600');
+            printWin.document.write(`
+                <html><head><title>Factura Aprisco El Silo</title>
+                <style>
+                    body { font-family: monospace; padding: 20px; color: #111; font-size: 12px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    .text-center { text-align: center; }
+                    .text-right { text-align: right; }
+                    .font-bold { font-weight: bold; }
+                    hr { border: none; border-top: 1px dashed #666; }
+                </style></head><body>${content}</body></html>
+            `);
+            printWin.document.close();
+            printWin.focus();
+            printWin.print();
+            printWin.close();
+        }
+
+        // =========================================================================
+        // 7. MÓDULO INVENTARIO Y PRODUCTOS
+        // =========================================================================
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventory-table-body');
+            const query = document.getElementById('inv-search').value.toLowerCase().trim();
+            const cat = document.getElementById('inv-category-filter').value;
+            const stockFilter = document.getElementById('inv-stock-filter').value;
+
+            const filtered = products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(query) || p.unit.toLowerCase().includes(query);
+                const matchCat = cat === 'ALL' || p.category === cat;
+                const matchStock = stockFilter === 'ALL' 
+                    || (stockFilter === 'LOW' && p.stock > 0 && p.stock <= 5)
+                    || (stockFilter === 'OUT' && p.stock === 0);
+                return matchSearch && matchCat && matchStock;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-stone-400">No hay productos que coincidan con los filtros.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => {
+                const badgeClass = p.stock === 0 
+                    ? 'bg-red-100 text-red-700 border-red-200' 
+                    : p.stock <= 5 
+                        ? 'bg-amber-100 text-amber-800 border-amber-300' 
+                        : 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                const statusLabel = p.stock === 0 ? 'Agotado' : p.stock <= 5 ? 'Stock Bajo' : 'Óptimo';
+
+                return `
+                <tr class="hover:bg-cream-50/80 transition-colors">
+                    <td class="py-3.5 px-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl bg-cream-100 w-10 h-10 rounded-xl flex items-center justify-center border border-cream-200 shrink-0">${p.icon || '🧀'}</span>
+                            <div>
+                                <p class="font-bold text-stone-800">${p.name}</p>
+                                <p class="text-xs text-stone-500">Presentación: ${p.unit}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <span class="text-xs font-medium bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg">${p.category}</span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-bold text-forest-800">${formatCOP(p.price)}</td>
+                    <td class="py-3.5 px-4 text-center">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${badgeClass}">
+                            <span>${p.stock} uds</span>
+                            <span class="text-[10px] opacity-80">(${statusLabel})</span>
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-center">
+                        <div class="inline-flex items-center gap-1">
+                            <button onclick="adjustStock('${p.id}', 1)" class="px-2.5 py-1 rounded-lg bg-forest-50 hover:bg-forest-600 text-forest-700 hover:text-white text-xs font-bold border border-forest-200 transition-colors">+1</button>
+                            <button onclick="adjustStock('${p.id}', 5)" class="px-2.5 py-1 rounded-lg bg-forest-50 hover:bg-forest-600 text-forest-700 hover:text-white text-xs font-bold border border-forest-200 transition-colors">+5</button>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4 text-right">
+                        <button onclick="openProductModal('${p.id}')" class="p-2 text-stone-500 hover:text-forest-700 hover:bg-cream-100 rounded-lg transition-colors" title="Editar producto">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function adjustStock(productId, delta) {
+            const prod = products.find(p => p.id === productId);
+            if (!prod) return;
+            prod.stock = Math.max(0, prod.stock + delta);
+            saveProductsStorage();
+            renderInventoryTable();
+            updateLowStockBadge();
+            showToast(`Stock actualizado: ${prod.name} (${prod.stock} uds)`);
+        }
+
+        function openProductModal(productId = null) {
+            const form = document.getElementById('product-form');
+            form.reset();
+            if (productId) {
+                const prod = products.find(p => p.id === productId);
+                if (!prod) return;
+                document.getElementById('product-modal-title').textContent = 'Editar Producto';
+                document.getElementById('prod-id').value = prod.id;
+                document.getElementById('prod-name').value = prod.name;
+                document.getElementById('prod-category').value = prod.category;
+                document.getElementById('prod-unit').value = prod.unit;
+                document.getElementById('prod-price').value = prod.price;
+                document.getElementById('prod-stock').value = prod.stock;
+                document.getElementById('prod-icon').value = prod.icon || '🧀';
+            } else {
+                document.getElementById('product-modal-title').textContent = 'Nuevo Producto Caprino';
+                document.getElementById('prod-id').value = '';
+            }
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value;
+            const name = document.getElementById('prod-name').value.trim();
+            const category = document.getElementById('prod-category').value;
+            const unit = document.getElementById('prod-unit').value.trim();
+            const price = parseInt(document.getElementById('prod-price').value) || 0;
+            const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+            const icon = document.getElementById('prod-icon').value;
+
+            if (id) {
+                const prod = products.find(p => p.id === id);
+                if (prod) {
+                    prod.name = name;
+                    prod.category = category;
+                    prod.unit = unit;
+                    prod.price = price;
+                    prod.stock = stock;
+                    prod.icon = icon;
+                }
+                showToast('Producto actualizado correctamente.');
+            } else {
+                const newId = 'P' + String(Date.now()).slice(-5);
+                products.push({ id: newId, name, category, unit, price, stock, icon });
+                showToast('Nuevo producto agregado al inventario.');
+            }
+
+            saveProductsStorage();
+            closeModal('product-modal');
+            renderInventoryTable();
+            renderPosCatalog();
+            updateLowStockBadge();
+        }
+
+        function updateLowStockBadge() {
+            const lowCount = products.filter(p => p.stock <= 5).length;
+            const badge = document.getElementById('low-stock-badge');
+            if (lowCount > 0) {
+                badge.textContent = lowCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // =========================================================================
+        // 8. MÓDULO CLIENTES
+        // =========================================================================
+        function renderClientsGrid() {
+            const grid = document.getElementById('clients-grid');
+            const query = document.getElementById('client-search').value.toLowerCase().trim();
+
+            const filtered = clients.filter(c => 
+                c.name.toLowerCase().includes(query) || 
+                c.phone.toLowerCase().includes(query) || 
+                (c.doc && c.doc.toLowerCase().includes(query))
+            );
+
+            grid.innerHTML = filtered.map(c => {
+                const clientSales = sales.filter(s => s.clientId === c.id && s.status === 'VALIDA');
+                const totalSpent = clientSales.reduce((sum, s) => sum + s.total, 0);
+
+                return `
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-cream-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-forest-100 text-forest-800 font-bold flex items-center justify-center shrink-0">
+                                    ${c.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-stone-800 text-sm">${c.name}</h3>
+                                    <p class="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
+                                        <i class="fa-brands fa-whatsapp text-emerald-600"></i> ${c.phone}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        ${c.doc || c.email ? `<p class="text-[11px] text-stone-500 mt-3 bg-cream-50 px-2.5 py-1.5 rounded-lg">${c.doc ? `ID: ${c.doc} ` : ''}${c.email ? `• ${c.email}` : ''}</p>` : ''}
+                        ${c.notes ? `<p class="text-xs text-stone-600 mt-2.5 italic">"${c.notes}"</p>` : ''}
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs">
+                        <span class="text-stone-500">Compras: <strong class="text-stone-800">${clientSales.length}</strong></span>
+                        <span class="font-bold text-forest-700">${formatCOP(totalSpent)}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openClientModal(fromPos = false) {
+            document.getElementById('client-form').reset();
+            document.getElementById('client-from-pos').value = fromPos ? 'true' : 'false';
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        function saveClient(e) {
+            e.preventDefault();
+            const name = document.getElementById('cli-name').value.trim();
+            const phone = document.getElementById('cli-phone').value.trim();
+            const doc = document.getElementById('cli-doc').value.trim();
+            const email = document.getElementById('cli-email').value.trim();
+            const notes = document.getElementById('cli-notes').value.trim();
+            const fromPos = document.getElementById('client-from-pos').value === 'true';
+
+            const newClient = {
+                id: 'C' + String(Date.now()).slice(-5),
+                name, phone, doc, email, notes
+            };
+
+            clients.push(newClient);
+            saveClientsStorage();
+            closeModal('client-modal');
+            renderClientSelect();
+            renderClientsGrid();
+
+            if (fromPos) {
+                document.getElementById('pos-client-select').value = newClient.id;
+            }
+            showToast(`Cliente "${name}" registrado con éxito.`);
+        }
+
+        // =========================================================================
+        // 9. MÓDULO VENTAS Y CIERRE DIARIO
+        // =========================================================================
+        function renderSalesReport() {
+            const filterDate = document.getElementById('sales-date-filter').value;
+            const filteredSales = filterDate ? sales.filter(s => s.dateISO === filterDate) : sales;
+            const validSales = filteredSales.filter(s => s.status === 'VALIDA');
+
+            const totalAmount = validSales.reduce((sum, s) => sum + s.total, 0);
+            const cashAmount = validSales.filter(s => s.paymentMethod === 'Efectivo').reduce((sum, s) => sum + s.total, 0);
+            const digitalAmount = totalAmount - cashAmount;
+
+            // Calcular producto estrella
+            const productCounts = {};
+            validSales.forEach(s => {
+                s.items.forEach(i => {
+                    productCounts[i.name] = (productCounts[i.name] || 0) + i.qty;
+                });
+            });
+            let topName = 'Sin ventas aún';
+            let topQty = 0;
+            for (const [name, qty] of Object.entries(productCounts)) {
+                if (qty > topQty) { topQty = qty; topName = name; }
+            }
+
+            document.getElementById('kpi-total-sales').textContent = formatCOP(totalAmount);
+            document.getElementById('kpi-invoice-count').textContent = `${validSales.length} factura(s) válida(s)`;
+            document.getElementById('kpi-cash-sales').textContent = formatCOP(cashAmount);
+            document.getElementById('kpi-digital-sales').textContent = formatCOP(digitalAmount);
+            document.getElementById('kpi-top-product').textContent = topName;
+            document.getElementById('kpi-top-product-qty').textContent = `${topQty} unidades vendidas`;
+            document.getElementById('sales-table-subtitle').textContent = filterDate ? `Mostrando facturas del ${filterDate}` : 'Mostrando historial completo';
+
+            const tbody = document.getElementById('sales-table-body');
+            if (filteredSales.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-stone-400">No hay facturas registradas para la fecha seleccionada.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filteredSales.map(s => {
+                const isVoid = s.status === 'ANULADA';
+                const itemsSummary = s.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+                return `
+                <tr class="${isVoid ? 'bg-red-50/50 text-stone-400' : 'hover:bg-cream-50'}">
+                    <td class="py-3.5 px-4 font-mono font-bold text-xs ${isVoid ? 'line-through' : 'text-forest-800'}">${s.id}</td>
+                    <td class="py-3.5 px-4 text-xs">${s.dateISO} <span class="text-stone-400">${s.timeStr}</span></td>
+                    <td class="py-3.5 px-4 font-medium">${s.clientName}</td>
+                    <td class="py-3.5 px-4 text-xs max-w-xs truncate" title="${itemsSummary}">${itemsSummary}</td>
+                    <td class="py-3.5 px-4 text-xs font-semibold">${s.paymentMethod}</td>
+                    <td class="py-3.5 px-4 text-right font-bold ${isVoid ? 'line-through' : 'text-forest-800'}">${formatCOP(s.total)}</td>
+                    <td class="py-3.5 px-4 text-center">
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isVoid ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-800'}">
+                            ${s.status}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
+                        <button onclick='openReceiptModalById("${s.id}")' class="px-2.5 py-1.5 rounded-lg bg-cream-100 hover:bg-cream-200 text-forest-800 text-xs font-semibold" title="Ver o imprimir recibo">
+                            <i class="fa-solid fa-receipt"></i>
+                        </button>
+                        ${!isVoid ? `
+                        <button onclick='confirmVoidSale("${s.id}")' class="px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white text-xs font-semibold transition-colors" title="Anular factura y devolver stock">
+                            <i class="fa-solid fa-ban"></i>
+                        </button>` : ''}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function openReceiptModalById(saleId) {
+            const sale = sales.find(s => s.id === saleId);
+            if (sale) openReceiptModal(sale);
+        }
+
+        function confirmVoidSale(saleId) {
+            document.getElementById('confirm-title').textContent = `¿Anular factura ${saleId}?`;
+            document.getElementById('confirm-message').textContent = 'La factura quedará marcada como ANULADA y los productos vendidos regresarán automáticamente al stock disponible.';
+            const btn = document.getElementById('confirm-action-btn');
+            btn.onclick = () => {
+                voidSale(saleId);
+                closeModal('confirm-modal');
+            };
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function voidSale(saleId) {
+            const sale = sales.find(s => s.id === saleId);
+            if (!sale || sale.status === 'ANULADA') return;
+
+            sale.status = 'ANULADA';
+            // Devolver stock
+            sale.items.forEach(item => {
+                const prod = products.find(p => p.id === item.productId);
+                if (prod) prod.stock += item.qty;
+            });
+
+            saveSalesStorage();
+            saveProductsStorage();
+            renderSalesReport();
+            renderPosCatalog();
+            updateHeaderKPIs();
+            updateLowStockBadge();
+            showToast(`Factura ${saleId} anulada y stock restaurado.`, 'warning');
+        }
+
+        function exportSalesCSV() {
+            const filterDate = document.getElementById('sales-date-filter').value;
+            const list = filterDate ? sales.filter(s => s.dateISO === filterDate) : sales;
+
+            if (list.length === 0) {
+                showToast('No hay ventas para exportar en la fecha seleccionada.', 'warning');
+                return;
+            }
+
+            const headers = ['Factura', 'Fecha', 'Hora', 'Vendedora', 'Cliente', 'Telefono', 'Metodo_Pago', 'Subtotal_COP', 'Descuento_COP', 'Total_COP', 'Estado', 'Detalle_Productos'];
+            const rows = list.map(s => {
+                const detail = s.items.map(i => `${i.qty}x ${i.name} (${i.unit})`).join(' | ');
+                return [
+                    s.id, s.dateISO, s.timeStr, `"${s.seller}"`, `"${s.clientName}"`, `"${s.clientPhone}"`,
+                    `"${s.paymentMethod}"`, s.subtotal, s.discount, s.total, s.status, `"${detail}"`
+                ].join(',');
+            });
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Aprisco_El_Silo_Ventas_${filterDate || 'General'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Archivo CSV descargado correctamente.');
+        }
+
+        function openResetConfirmModal() {
+            document.getElementById('confirm-title').textContent = '¿Restaurar datos de demostración?';
+            document.getElementById('confirm-message').textContent = 'Se restablecerá el catálogo inicial del Aprisco El Silo y se borrará el historial de pruebas.';
+            const btn = document.getElementById('confirm-action-btn');
+            btn.onclick = () => {
+                localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
+                localStorage.removeItem(STORAGE_KEYS.CLIENTS);
+                localStorage.removeItem(STORAGE_KEYS.SALES);
+                cart = [];
+                loadData();
+                initUI();
+                closeModal('confirm-modal');
+                showToast('Datos de demostración restaurados.');
+            };
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        // =========================================================================
+        // 10. UTILIDADES DE INTERFAZ Y ARRANQUE
+        // =========================================================================
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function updateHeaderKPIs() {
+            const today = getTodayISO();
+            const todaySales = sales.filter(s => s.dateISO === today && s.status === 'VALIDA');
+            const totalToday = todaySales.reduce((sum, s) => sum + s.total, 0);
+
+            document.getElementById('header-sales-desktop').textContent = formatCOP(totalToday);
+            document.getElementById('header-sales-mobile').textContent = formatCOP(totalToday);
+            document.getElementById('header-invoices-desktop').textContent = todaySales.length;
+        }
+
+        function initUI() {
+            const today = getTodayISO();
+            document.getElementById('header-date').textContent = formatReadableDate(new Date());
+            document.getElementById('sales-date-filter').value = today;
+
+            renderPosCatalog();
+            renderClientSelect();
+            renderCart();
+            renderInventoryTable();
+            renderClientsGrid();
+            renderSalesReport();
+            updateHeaderKPIs();
+            updateLowStockBadge();
+        }
+
+        window.onload = function() {
+            loadData();
+            initUI();
+        };
+    </script>
+</body>
+</html>
